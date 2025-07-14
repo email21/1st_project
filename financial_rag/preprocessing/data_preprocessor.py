@@ -1,5 +1,7 @@
+from datetime import datetime
 import pandas as pd
 import numpy as np
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Union, Any
 
@@ -20,14 +22,32 @@ class DataPreprocessor:
         self.df: Optional[pd.DataFrame] = None
         self.processed_df: Optional[pd.DataFrame] = None
         
+        # 로깅 설정
+        self._setup_logging()
+
+    def _setup_logging(self) -> None:
+        """로깅 설정"""
+        log_dir = Path('../logs')
+        log_dir.mkdir(parents=True, exist_ok=True)
+        
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler(log_dir / 'data_preprocessor.log', encoding='utf-8'),
+                logging.StreamHandler()
+            ]
+        )
+        self.logger: logging.Logger = logging.getLogger(__name__)
+
     def load_data(self) -> Optional[pd.DataFrame]:
         """데이터 로드"""
         try:
             self.df = pd.read_csv(self.file_path)
-            print(f"✅ 데이터 로드 완료: {len(self.df)}행, {len(self.df.columns)}열")
+            self.logger.info(f"✅ 데이터 로드 완료: {len(self.df)}행, {len(self.df.columns)}열")
             return self.df
         except Exception as e:
-            print(f"❌ 데이터 로드 실패: {e}")
+            self.logger.error(f"❌ 데이터 로드 실패: {e}")
             return None
 
     def get_core_columns(self) -> Dict[str, List[str]]:
@@ -99,13 +119,13 @@ class DataPreprocessor:
     def clean_data(self) -> Optional[pd.DataFrame]:
         """데이터 정제"""
         if self.df is None:
-            print("❌ 데이터가 로드되지 않았습니다.")
+            self.logger.error("❌ 데이터가 로드되지 않았습니다.")
             return None
 
         # 핵심 컬럼 추출
         column_config: Dict[str, List[str]] = self.get_core_columns()
         if not column_config:
-            print(f"❌ 지원하지 않는 상품 유형: {self.product_type}")
+            self.logger.error(f"❌ 지원하지 않는 상품 유형: {self.product_type}")
             return None
 
         # 핵심 컬럼만 선택
@@ -116,7 +136,7 @@ class DataPreprocessor:
         essential_cols: List[str] = ['kor_co_nm', 'fin_prdt_nm']
         initial_count: int = len(self.processed_df)
         self.processed_df.dropna(subset=essential_cols, inplace=True)
-        print(f"🔶 필수 컬럼 결측값 제거: {initial_count} → {len(self.processed_df)}행")
+        self.logger.info(f"🔶 필수 컬럼 결측값 제거: {initial_count} → {len(self.processed_df)}행")
 
         # 텍스트 데이터 정제
         self.processed_df['kor_co_nm'] = self.processed_df['kor_co_nm'].str.strip()
@@ -132,11 +152,11 @@ class DataPreprocessor:
         # 중복 제거
         before_dedup: int = len(self.processed_df)
         self.processed_df.drop_duplicates(subset=['kor_co_nm', 'fin_prdt_nm'], inplace=True)
-        print(f"🔶 중복 제거: {before_dedup} → {len(self.processed_df)}행")
+        self.logger.info(f"🔶 중복 제거: {before_dedup} → {len(self.processed_df)}행")
 
         # 연금상품 etc 컬럼 특별 처리 추가
         if self.product_type == 'annuity' and 'etc' in self.processed_df.columns:
-            print("🔧 연금상품 etc 컬럼 특별 처리 중...")
+            self.logger.info("🔧 연금상품 etc 컬럼 특별 처리 중...")
             # etc 컬럼 사용 가능 여부 판단
             self.processed_df['etc_available'] = (
                 self.processed_df['etc'].notna() &
@@ -148,7 +168,7 @@ class DataPreprocessor:
             # 연금 etc 통계 출력
             available_count: int = self.processed_df['etc_available'].sum()
             total_count: int = len(self.processed_df)
-            print(f" 📋 etc 정보 보유: {available_count}/{total_count}개 상품 ({available_count/total_count*100:.1f}%)")
+            self.logger.info(f" 📋 etc 정보 보유: {available_count}/{total_count}개 상품 ({available_count/total_count*100:.1f}%)")
 
         return self.processed_df
 
@@ -259,15 +279,16 @@ class DataPreprocessor:
     def add_search_text_column(self) -> Optional[pd.DataFrame]:
         """검색용 텍스트 컬럼 추가"""
         if self.processed_df is None:
-            print("❌ 전처리된 데이터가 없습니다.")
+            self.logger.error("❌ 전처리된 데이터가 없습니다.")
             return None
 
         self.processed_df['search_text'] = self.processed_df.apply(
             lambda row: self.create_search_text(row), axis=1
         )
 
-        print("✅ 검색용 텍스트 컬럼 추가 완료")
+        self.logger.info("✅ 검색용 텍스트 컬럼 추가 완료")
         return self.processed_df
+
 
     def get_statistics(self) -> Optional[Dict[str, Any]]:
         """데이터 통계 정보 출력"""
@@ -275,14 +296,60 @@ class DataPreprocessor:
             return None
 
         stats: Dict[str, Any] = {
+            '일시': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             '총 상품 수': len(self.processed_df),
             '금융회사 수': self.processed_df['kor_co_nm'].nunique(),
             '상품 유형': self.product_type,
             '주요 금융회사': self.processed_df['kor_co_nm'].value_counts().head(5).to_dict()
         }
 
-        # 금리 통계 (대출 상품)
-        if self.product_type in ['mortgage', 'rent']:
+        # 상품별 금리 통계 추가
+        if self.product_type in ['deposit', 'saving']:
+        # 예적금 금리 통계
+            if 'intr_rate' in self.processed_df.columns:
+                valid_rates = self.processed_df['intr_rate'].dropna()
+                if len(valid_rates) > 0:
+                    stats['기본금리 범위'] = f"{valid_rates.min():.2f}% ~ {valid_rates.max():.2f}%"
+                    stats['기본금리 평균'] = f"{valid_rates.mean():.2f}%"
+            
+            if 'intr_rate2' in self.processed_df.columns:
+                valid_rates2 = self.processed_df['intr_rate2'].dropna()
+                if len(valid_rates2) > 0:
+                    stats['최고우대금리 범위'] = f"{valid_rates2.min():.2f}% ~ {valid_rates2.max():.2f}%"
+                    stats['최고우대금리 평균'] = f"{valid_rates2.mean():.2f}%"
+            
+            # 적금 특화 통계
+            if self.product_type == 'saving' and 'rsrv_type_nm' in self.processed_df.columns:
+                stats['적립유형 분포'] = self.processed_df['rsrv_type_nm'].value_counts().to_dict()
+    
+        elif self.product_type == 'annuity':
+            # 연금저축 금리 통계
+            if 'dcls_rate' in self.processed_df.columns:
+                valid_dcls = self.processed_df['dcls_rate'].dropna()
+                if len(valid_dcls) > 0:
+                    stats['공시이율 범위'] = f"{valid_dcls.min():.2f}% ~ {valid_dcls.max():.2f}%"
+                    stats['공시이율 평균'] = f"{valid_dcls.mean():.2f}%"
+            
+            if 'guar_rate' in self.processed_df.columns:
+                valid_guar = self.processed_df['guar_rate'].dropna()
+                if len(valid_guar) > 0:
+                    stats['최저보증이율 범위'] = f"{valid_guar.min():.2f}% ~ {valid_guar.max():.2f}%"
+                    stats['최저보증이율 평균'] = f"{valid_guar.mean():.2f}%"
+            
+            # 과거 수익률 통계
+            profit_rates = ['btrm_prft_rate_1', 'btrm_prft_rate_2', 'btrm_prft_rate_3']
+            for i, rate_col in enumerate(profit_rates, 1):
+                if rate_col in self.processed_df.columns:
+                    valid_profit = self.processed_df[rate_col].dropna()
+                    if len(valid_profit) > 0:
+                        stats[f'과거수익률{i}년 범위'] = f"{valid_profit.min():.2f}% ~ {valid_profit.max():.2f}%"
+            
+            # 연금 종류 분포
+            if 'pnsn_kind_nm' in self.processed_df.columns:
+                stats['연금종류 분포'] = self.processed_df['pnsn_kind_nm'].value_counts().to_dict()
+    
+          # 금리 통계 (대출 상품)
+        elif self.product_type in ['mortgage', 'rent']:
             if 'lend_rate_min' in self.processed_df.columns:
                 stats['최저금리 범위'] = f"{self.processed_df['lend_rate_min'].min():.2f}% ~ {self.processed_df['lend_rate_min'].max():.2f}%"
             if 'lend_rate_max' in self.processed_df.columns:
@@ -292,10 +359,10 @@ class DataPreprocessor:
                 stats['평균금리 범위'] = f"{self.processed_df['crdt_grad_avg'].min():.2f}% ~ {self.processed_df['crdt_grad_avg'].max():.2f}%"
 
         return stats
-
+    
     def preprocess(self) -> Optional[pd.DataFrame]:
         """전체 전처리 파이프라인 실행"""
-        print(f"▶️ {self.product_type} 상품 데이터 전처리 시작")
+        self.logger.info(f"▶️ {self.product_type} 상품 데이터 전처리 시작")
 
         # 1. 데이터 로드
         if self.load_data() is None:
@@ -311,23 +378,23 @@ class DataPreprocessor:
         # 4. 통계 정보 출력
         stats: Optional[Dict[str, Any]] = self.get_statistics()
         if stats:
-            print("\n📊 전처리 완료 통계:")
+            self.logger.info("\n📊 전처리 완료 통계:")
             for key, value in stats.items():
-                print(f" {key}: {value}")
+                self.logger.info(f" {key}: {value}")
 
-        print("✅ 전처리 완료!")
+        self.logger.info("✅ 전처리 완료!")
         return self.processed_df
 
     def save_processed_data(self, output_path: str) -> bool:
         """전처리된 데이터 저장"""
         if self.processed_df is None:
-            print("❌ 전처리된 데이터가 없습니다.")
+            self.logger.error("❌ 전처리된 데이터가 없습니다.")
             return False
 
         try:
             self.processed_df.to_csv(output_path, index=False, encoding='utf-8')
-            print(f"💾 전처리된 데이터 저장 완료: {output_path}")
+            self.logger.info(f"💾 전처리된 데이터 저장 완료: {output_path}")
             return True
         except Exception as e:
-            print(f"❌ 데이터 저장 실패: {e}")
+            self.logger.error(f"❌ 데이터 저장 실패: {e}")
             return False
