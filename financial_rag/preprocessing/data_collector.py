@@ -1,4 +1,4 @@
-# 데이터 수집
+# 데이터 수집 collect_data.py
 import requests
 import pandas as pd
 import os
