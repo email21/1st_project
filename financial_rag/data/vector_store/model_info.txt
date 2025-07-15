@@ -1,0 +1,3 @@
+Model: kakaobank/kf-deberta-base
+Dimension: 768
+Documents: 1373
