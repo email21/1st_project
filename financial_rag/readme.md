@@ -14,13 +14,23 @@
 - **다양한 상품 지원**: 예금, 적금, 연금, 대출, 신용카드 등 다양한 금융 상품 처리
 
 ### 📊 단계별 흐름도
-graph TD
-    A[사용자 질문 입력<br/>app.py] --> B[질문 분석<br/>solar_client.py]
-    B --> C[관련 상품 검색<br/>vector_store.py]
-    C --> D[AI 답변 생성<br/>solar_client.py]
-    D --> E[결과 화면 표시<br/>app.py]
+```
+```
+사용자 질문 입력 (app.py)
+         ↓
+질문 분석 (solar_client.py)
+         ↓
+관련 상품 검색 (vector_store.py)
+         ↓
+AI 답변 생성 (solar_client.py)
+         ↓
+결과 화면 표시 (app.py)
+```
+```
 
 ### 📁 프로젝트 구조
+```
+```
 financial_rag/
 ├── app/                    
 │   └── app.py                      
@@ -40,7 +50,9 @@ financial_rag/
 │   ├── raw/
 │   └── vector_store/  
 ├── logs/
-└── .gitignore               
+└── .gitignore       
+```
+```        
 
 ### 🤖 질문분석과 추천답변 모두 solar-1-mini-chat을 사용한 이유
 **일관성 유지**
