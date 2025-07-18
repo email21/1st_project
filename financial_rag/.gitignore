@@ -1,8 +1,0 @@
-# 환경 설정 파일 제외
-.env
-# Python
-__pycache__/
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
