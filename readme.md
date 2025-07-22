@@ -28,6 +28,7 @@ git clone https://github.com/
 pip install -r requirements.txt
 ### 3. 환경변수 설정
 `.env` 파일을 생성하고 다음 내용을 추가하세요:
+
 FINLIFE_API_KEY=your_finlife_api_key_here
 SOLAR_API_KEY=your_solar_api_key_here
 ### 4. 실행
