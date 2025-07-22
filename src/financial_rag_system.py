@@ -471,10 +471,12 @@ class FinancialRecommendationSystem:
             - clarification: 이전 대화 참조 ("아까", "전에", "마지막으로")
     
             **카테고리 분류 기준:**
-            - 정기예금: "정기예금", "예금", "목돈 불리기", "일시불 예치"
-            - 적금: "적금", "매월 저축", "목돈 모으기", "분할 납입"
-            - 연금저축: "연금", "노후 준비", "은퇴 자금"
-            - 대출: "대출", "융자", "자금 조달"
+            - 정기예금: "정기예금", "예금", "목돈 불리기", "일시불 예치", "저축예금", "정액예치"
+            - 적금: "적금", "매월 저축", "목돈 모으기", "분할 납입", "정기적금", "월납적금"
+            - 연금저축: "연금", "노후 준비", "은퇴 자금", "연금저축", "개인연금", "퇴직연금"
+            - 주택담보대출: "주택담보대출", "아파트담보대출", "부동산담보대출", "주택구입자금", "주택담보"
+            - 전세자금대출: "전세자금대출", "전세대출", "전세보증금", "주거자금", "임차보증금"
+            - 개인신용대출: "개인신용대출", "신용대출", "무담보대출", "마이너스통장", "직장인신용대출"
             
             반드시 다음 JSON 형식으로만 답변하세요:
             {{
@@ -496,16 +498,16 @@ class FinancialRecommendationSystem:
             )
             
             response = analysis_model.invoke([HumanMessage(content=analysis_prompt)])
-            import logging
-            # 로깅 설정 ##
-            logging.basicConfig(level=logging.INFO)
-            logger = logging.getLogger(__name__)            
+            # import logging
+            # # 로깅 설정 ##
+            # logging.basicConfig(level=logging.INFO)
+            # logger = logging.getLogger(__name__)            
             
             # Solar API 응답을 실제로 파싱
             import json  
             try:
                 parsed_result = json.loads(response.content)
-                logger.info(f"----  Solar API 분석 결과: {json.dumps(parsed_result, ensure_ascii=False, indent=2)}")
+                #logger.info(f"----  Solar API 분석 결과: {json.dumps(parsed_result, ensure_ascii=False, indent=2)}")
                  # Streamlit에서 JSON 표시 (개발자 모드)
                 if st.session_state.get('show_debug', False):
                     st.subheader("🔍 분석 결과 (JSON)")
@@ -623,7 +625,7 @@ class FinancialRecommendationSystem:
     def reset_conversation(self):
         """대화 기록 초기화"""
         self.conversation_history = []
-        print("대화 기록이 초기화되었습니다.")
+        print("--- 대화 기록이 초기화되었습니다. --- financial_rag_system.py")
         
     def sync_conversation_history(self, streamlit_conversation: List[Dict]):
         """Streamlit 대화 기록과 RAG 시스템 동기화"""
