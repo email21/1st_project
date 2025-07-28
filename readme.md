@@ -23,7 +23,7 @@
 
 ## 설치 및 실행
 ### 1. 저장소 클론
-git clone https://github.com/
+git clone https://github.com/email21/1st_project.git
 ### 2. 종속성 설치
 pip install -r requirements.txt
 ### 3. 환경변수 설정
