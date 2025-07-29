@@ -63,27 +63,7 @@ class FinancialRecommendationSystem:
             
         except Exception as e:
             print(f"❌ 시스템 초기화 실패: {e}")
-            raise
-        
-    def _map_category_to_type(self, category: str) -> str:
-        """사용자 카테고리를 데이터 타입으로 매핑"""
-        if '정기예금' in category:
-            return 'deposit'
-        elif '적금' in category:
-            return 'saving'
-        elif category == '예금':  # 단순 '예금'은 정기예금으로 처리
-            return 'deposit'
-        elif '저축' in category and '적금' not in category:
-            return 'deposit'
-        elif '연금' in category:
-            return 'annuity'
-        elif '주택담보' in category:
-            return 'mortgage'
-        elif '전세' in category:
-            return 'rent'
-        elif '신용대출' in category or '개인신용' in category:
-            return 'credit'
-        return ''
+            raise            
         
     def _load_financial_data(self):
         """금융상품 데이터 로드 및 벡터스토어 구축"""
