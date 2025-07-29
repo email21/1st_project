@@ -1,6 +1,6 @@
 import streamlit as st
 from typing import Dict, Any
-from src.financial_rag_system import FinancialRecommendationSystem
+from financial_rag_system import FinancialRecommendationSystem
 
 # 페이지 설정
 st.set_page_config(
