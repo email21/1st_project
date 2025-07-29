@@ -1,6 +1,9 @@
 # 금융감독원 데이터 기반 한국어 금융상품 추천 AI 챗봇: RAG 대화형 시스템
 본 프로젝트는 복잡하고 다양한 금융상품 정보로 인해 사용자들이 겪는 선택의 어려움과 개인 맞춤형 상담 서비스의 부재라는 문제를 해결하기 위해, 한국어 금융 도메인에 특화된 RAG(Retrieval-Augmented Generation) 기반 대화형 추천 시스템을 개발한 프로젝트입니다.
 
+## 배포 링크
+https://email21-1st-project-srcapp-last-yximby.streamlit.app/
+<br>
 ## 프로젝트 개요
 ### 주요 기능
 - 자연어 기반 금융상품 질문 및 추천
