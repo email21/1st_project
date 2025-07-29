@@ -68,7 +68,8 @@ class FinancialRecommendationSystem:
     def _load_financial_data(self):
         """금융상품 데이터 로드 및 벡터스토어 구축"""
         documents = []
-        data_dir = "../data/processed"
+        # data_dir = "../data/processed"
+        data_dir = "data/processed"
         product_files = {
             'deposit': 'deposit_processed.csv',
             'saving': 'saving_processed.csv', 
