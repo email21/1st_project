@@ -59,11 +59,11 @@ def main():
         else:
             st.write("대화 기록이 없습니다.")
         st.markdown("---")
-        st.header("🔧 개발자 도구")
-        st.session_state.show_debug = st.checkbox("분석 결과 JSON 표시", value=False)
+        # st.header("🔧 개발자 도구")
+        # st.session_state.show_debug = st.checkbox("분석 결과 JSON 표시", value=False)
     
-        if st.session_state.show_debug:
-            st.info("디버그 모드: API 분석 결과를 JSON 형태로 표시합니다.")
+        # if st.session_state.show_debug:
+        #     st.info("디버그 모드: API 분석 결과를 JSON 형태로 표시합니다.")
              
     col_center, col_right = st.columns([2, 1]) # 메인 레이아웃: 중앙(채팅) : 오른쪽(시스템 현황) = 2:1
     
